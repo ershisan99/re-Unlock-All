@@ -66,13 +66,13 @@ end
 
 G.FUNCS.reunlock_clear_alerts = function ()
     for _, v in pairs(G.P_CENTERS) do
-            v.alerted = true
+            if v.discovered then v.alerted = true end
     end
     for _, v in pairs(G.P_BLINDS) do
-            v.alerted = true
+            if v.discovered then v.alerted = true end
     end
     for _, v in pairs(G.P_TAGS) do
-            v.alerted = true
+            if v.discovered then v.alerted = true end
     end
     set_profile_progress()
     set_discover_tallies()
