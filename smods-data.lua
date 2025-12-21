@@ -64,6 +64,50 @@ G.FUNCS.reunlock_per_mod = function (mod)
     end
 end
 
+---Discovers all items on a per-mod basis, without unlocking anything with an unlock condition. Due to order of operations, anything unlocked by these discoveries will be skipped over. oopsie lel
+---@param mod string ID of the mod to discover
+G.FUNCS.discover_per_mod = function (mod)
+    mod = (type(mod) == "string") and mod or REUNLOCK.mod_unlock.option_value
+    --REUNLOCK.say("Time to unlock everything from "..mod)
+    if not (mod == "Vanilla" or SMODS.Mods[mod]) then return end
+    G.PROFILES[G.SETTINGS.profile].all_unlocked = true
+    local count = 0
+    for k, v in pairs(G.P_CENTERS) do
+        if (mod == "all") or (mod == "Vanilla" and not v.mod) or (v.mod and v.mod.id == mod) then
+            if (v.unlocked or (v.check_for_unlock == nil and v.unlock_condition == nil)) and not v.discovered then
+                count = count+1
+                v.alerted = true
+                v.discovered = true
+            end
+        end
+    end
+    for k, v in pairs(G.P_BLINDS) do
+        if (mod == "all") or (mod == "Vanilla" and not v.mod) or (v.mod and v.mod.id == mod) then
+            if (v.unlocked or (v.check_for_unlock == nil and v.unlock_condition == nil)) and not v.discovered then
+                count = count+1
+                v.alerted = true
+                v.discovered = true
+            end
+        end
+    end
+    for k, v in pairs(G.P_TAGS) do
+        if (mod == "all") or (mod == "Vanilla" and not v.mod) or (v.mod and v.mod.id == mod) then
+            if (v.unlocked or (v.check_for_unlock == nil and v.unlock_condition == nil)) and not v.discovered then
+                count = count+1
+                v.alerted = true
+                v.discovered = true
+            end
+        end
+    end
+    if count > 0 then
+        set_profile_progress()
+        set_discover_tallies()
+        G:save_progress()
+        G.FILE_HANDLER.force = true
+        play_sound('foil1', 1.2, 0.4)
+    end
+end
+
 G.FUNCS.reunlock_clear_alerts = function ()
     for _, v in pairs(G.P_CENTERS) do
             if v.discovered then v.alerted = true end
@@ -94,6 +138,12 @@ SMODS.current_mod.config_tab = function()
                 colour = G.C.GREY,
                 minw = 5.5
             })
+    local discover_per_mod_button = UIBox_button({
+                button = "discover_per_mod",
+                label = {"Discover all from selected mod"},
+                colour = G.C.GREY,
+                minw = 5.5
+            })
     local unlock_per_mod_cycle = create_option_cycle {
                 label = "Mods with unlocked/undiscovered features:",
                 options = mods,
@@ -113,6 +163,7 @@ SMODS.current_mod.config_tab = function()
     local buttons = {
         unlock_per_mod_cycle,
         unlock_per_mod_button,
+        discover_per_mod_button,
         clear_alerts,
     }
     if next(mods) then
